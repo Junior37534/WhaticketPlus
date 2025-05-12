@@ -1,0 +1,55 @@
+version: "3.8"
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: whaticket
+      MYSQL_USER: whaticket
+      MYSQL_PASSWORD: whaticket
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  backend:
+    build:
+      context: ./whaticketplus/backend
+    container_name: backend
+    restart: always
+    environment:
+      - DB_HOST=mysql
+      - DB_USER=whaticket
+      - DB_PASS=whaticket
+      - DB_NAME=whaticket
+      - REDIS_HOST=redis
+      - JWT_SECRET=your_jwt_secret
+      - CHROME_BIN=/usr/bin/google-chrome
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build:
+      context: ./whaticketplus/frontend
+    container_name: frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "3001:3000"
+
+volumes:
+  mysql_data:
